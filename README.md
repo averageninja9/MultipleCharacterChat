@@ -1,317 +1,273 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>My Character.AI - Fully Custom & Editable</title>
-  <style>
-    :root { --bg: #0d0d0d; --card: #1a1a1a; --accent: #00d4ff; --text: #f0f0f0; --gray: #333; }
-    body { margin:0; font-family: system-ui, sans-serif; background:var(--bg); color:var(--text); display:flex; flex-direction:column; height:100vh; }
-    header { padding:1.2rem; background:#000; text-align:center; font-size:1.6rem; color:var(--accent); font-weight:bold; }
-    #sidebar { width:320px; background:var(--card); padding:1rem; overflow-y:auto; border-right:1px solid #333; }
-    #characters { display:flex; flex-direction:column; gap:0.8rem; }
-    .char-item { 
-      background:var(--gray); border-radius:12px; padding:0.8rem; display:flex; align-items:center; gap:12px; 
-      position:relative; transition:0.2s;
-    }
-    .char-item:hover { background:#444; }
-    .char-item.active { background:var(--accent); color:black; font-weight:bold; }
-    .char-avatar { width:48px; height:48px; border-radius:50%; object-fit:cover; border:3px solid var(--accent); background:#555; }
-    .char-name { flex:1; font-size:1.1rem; }
-    .edit-btn { background:transparent; border:none; cursor:pointer; font-size:1.3rem; padding:4px 8px; border-radius:6px; }
-    .edit-btn:hover { background:rgba(255,255,255,0.2); }
-    #main { flex:1; display:flex; flex-direction:column; }
-    #chat { flex:1; padding:1.5rem; overflow-y:auto; display:flex; flex-direction:column; gap:1rem; }
-    .message { max-width:78%; padding:1rem 1.2rem; border-radius:20px; line-height:1.5; word-wrap:break-word; }
-    .user { align-self:flex-end; background:var(--accent); color:black; }
-    .bot { align-self:flex-start; background:#333; }
-    #input-area { padding:1rem; background:var(--card); display:flex; gap:0.8rem; border-top:1px solid #333; }
-    input { flex:1; padding:1rem; border:none; border-radius:50px; background:#333; color:white; font-size:1rem; }
-    button { padding:0 1.8rem; background:var(--accent); border:none; border-radius:50px; cursor:pointer; font-weight:bold; }
-    dialog { background:var(--card); color:var(--text); border:none; border-radius:20px; padding:2rem; width:90%; max-width:540px; box-shadow:0 20px 60px rgba(0,0,0,0.8); }
-    dialog::backdrop { background:rgba(0,0,0,0.92); }
-    form { display:grid; gap:1.2rem; }
-    label { display:flex; flex-direction:column; font-size:0.95rem; }
-    input, textarea, select { padding:0.9rem; border-radius:12px; border:none; background:#333; color:white; margin-top:0.4rem; }
-    .avatar-preview { width:130px; height:130px; border-radius:50%; object-fit:cover; border:5px solid var(--accent); margin:0 auto; display:block; background:#555; }
-    .avatar-upload { text-align:center; margin:1.5rem 0; }
-    .delete-photo { background:#ff3333; color:white; border:none; padding:0.5rem 1rem; border-radius:8px; cursor:pointer; margin-top:0.8rem; font-size:0.9rem; }
-    .modal-buttons { display:flex; gap:1rem; justify-content:flex-end; margin-top:1rem; }
-    .modal-buttons button { padding:0.8rem 1.5rem; border-radius:50px; font-weight:bold; }
-    .cancel-btn { background:#555; }
-    .save-btn { background:var(--accent); color:black; }
-  </style>
+<meta charset="UTF-8">
+<title>Character.AI-style Group Chat</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root { --bg: #1e1e1e; --msg: #2d2d2d; --user: #007bff; --bot: #333; --accent: #00ff9d; }
+  body { font-family: system-ui, sans-serif; background: var(--bg); color: #eee; margin:0; padding:0; height:100vh; display:flex; flex-direction:column; }
+  #header { padding: 10px; background: #111; border-bottom: 1px solid #444; text-align:center; }
+  #characters { padding:10px; background:#111; overflow-x:auto; white-space:nowrap; border-bottom:1px solid #444; }
+  .char { display:inline-block; text-align:center; margin:0 10px; width:80px; cursor:pointer; }
+  .char img { width:60px; height:60px; border-radius:50%; border:3px solid #444; object-fit:cover; }
+  .char small { display:block; font-size:10px; opacity:0.8; }
+  .char.active { border-color:var(--accent); }
+  #chat { flex:1; overflow-y:auto; padding:15px; display:flex; flex-direction:column; gap:12px; }
+  .msg { max-width:80%; padding:10px 14px; border-radius:18px; line-height:1.4; }
+  .msg.user { align-self:flex-end; background:var(--user); color:#fff; }
+  .msg.bot { align-self:flex-start; background:var(--msg); border-bottom-left-radius:4px; }
+  .msg .name { font-weight:bold; font-size:0.85em; opacity:0.8; display:block; margin-bottom:4px; }
+  #inputbar { display:flex; padding:10px; background:#111; gap:8px; }
+  #input { flex:1; padding:12px; border:none; border-radius:24px; background:#333; color:#fff; }
+  #send { background:var(--accent); color:#000; border:none; width:44px; height:44px; border-radius:50%; font-size:20px; cursor:pointer; }
+  button { background:var(--accent); color:#000; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; }
+  dialog { background:#222; color:#fff; border:1px solid #444; border-radius:12px; padding:20px; max-width:400px; }
+  dialog input, dialog textarea, dialog select { width:100%; padding:8px; margin:8px 0; background:#333; border:1px solid #555; border-radius:6px; color:#fff; }
+  .preview { width:100px; height:100px; border-radius:50%; object-fit:cover; margin:10px 0; border:3px solid var(--accent); }
+</style>
 </head>
 <body>
-  <header>My Character.AI – Unlimited & Fully Editable</header>
-  
-  <div style="display:flex; flex:1;">
-    <aside id="sidebar">
-      <button id="new-char" style="width:100%; padding:1.1rem; background:var(--accent); color:black; border:none; border-radius:12px; margin-bottom:1rem; cursor:pointer; font-size:1.2rem; font-weight:bold;">
-        + New Character
-      </button>
-      <div id="characters"></div>
-    </aside>
 
-    <section id="main">
-      <div id="chat"></div>
-      <div id="input-area">
-        <input type="text" id="user-input" placeholder="Say something..." autocomplete="off"/>
-        <button id="send">Send</button>
-      </div>
-    </section>
+<div id="header">
+  <h1>Character Group Chat</h1>
+  <button onclick="saveChat()">💾 Download Chat</button>
+  <button onclick="document.getElementById('loadFile').click()">📂 Load Chat</button>
+  <input type="file" id="loadFile" accept=".json" style="display:none">
+  <button onclick="showEditDialog()">+ Add Character</button>
+</div>
+
+<div id="characters"></div>
+
+<div id="chat"></div>
+
+<div id="inputbar">
+  <input id="input" placeholder="Type a message..." autocomplete="off">
+  <button id="send">➤</button>
+</div>
+
+<dialog id="editDialog">
+  <h2 id="dialogTitle">Add Character</h2>
+  <input type="hidden" id="editIndex">
+  <label>Name <input id="charName"></label>
+  <label>Age <input id="charAge" placeholder="optional"></label>
+  <label>Gender <input id="charGender" placeholder="optional"></label>
+  <label>Species <input id="charSpecies" placeholder="optional"></label>
+  <label>Description<br><textarea id="charDesc" rows="3" placeholder="optional"></textarea></label>
+  <label>Photo (click or drop)
+    <div id="dropArea" style="border:2px dashed #666; padding:20px; text-align:center; margin:10px 0;">
+      <img id="photoPreview" class="preview" src="" style="display:none">
+      <p>Drop image here or click</p>
+    </div>
+    <input type="file" id="photoInput" accept="image/*" style="display:none">
+  </label>
+  <div style="text-align:right; margin-top:20px;">
+    <button onclick="saveCharacter()">Save</button>
+    <button onclick="closeDialog()">Cancel</button>
+    <button id="deleteBtn" style="background:#f44; display:none;" onclick="deleteCharacter()">Delete</button>
   </div>
+</dialog>
 
-  <!-- Modal -->
-  <dialog id="char-modal">
-    <h2 id="modal-title">Create New Character</h2>
-    <form id="char-form">
-      <div class="avatar-upload">
-        <img id="avatar-preview" class="avatar-preview" src="" alt="Avatar" />
-        <input type="file" id="avatar-input" accept="image/*" hidden />
-        <label for="avatar-input" style="cursor:pointer; color:var(--accent); margin-top:1rem; display:inline-block;">Change Photo</label>
-        <p style="font-size:0.85rem; color:#aaa; margin:0.5rem 0;">or drag & drop</p>
-        <button type="button" class="delete-photo" id="delete-photo" style="display:none;">Remove Photo</button>
-      </div>
+<script>
+let characters = []; // {name, desc, age, gender, species, photoUrl}
+let messages = [];   // {sender:"user" or index, text}
+let currentChar = -1; // -1 = all characters visible
 
-      <label>Name *<input type="text" name="name" placeholder="e.g. Luna" required /></label>
-      <label>Description (personality, backstory...)<textarea name="description" rows="4" placeholder="Optional – leave blank for truly empty character"></textarea></label>
-      <label>Age <input type="number" name="age" min="0" placeholder="Leave blank" /></label>
-      <label>Gender 
-        <select name="gender">
-          <option value="">Not specified</option>
-          <option>Male</option>
-          <option>Female</option>
-          <option>Non-binary</option>
-          <option>Other</option>
-        </select>
-      </label>
-      <label>Species <input type="text" name="species" placeholder="e.g. Elf, Robot, Cat" /></label>
+loadFromStorage();
 
-      <div class="modal-buttons">
-        <button type="button" class="cancel-btn" id="cancel-modal">Cancel</button>
-        <button type="submit" class="save-btn">Save Character</button>
-      </div>
-    </form>
-  </dialog>
+renderCharacters();
+renderChat();
 
-  <script>
-    // === Data ===
-    const STORAGE_KEY = 'my-character-ai-v3';
-    let characters = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-    let activeChar = null;
-    let messages = [];
+document.getElementById('send').onclick = sendMessage;
+document.getElementById('input').onkeydown = e => { if(e.key==='Enter') sendMessage(); };
+document.getElementById('loadFile').onchange = loadChat;
+document.getElementById('dropArea').onclick = () => document.getElementById('photoInput').click();
+document.getElementById('photoInput').onchange = e => handlePhoto(e.target.files[0]);
+document.getElementById('dropArea').ondragover = e => {e.preventDefault(); e.target.style.borderColor='white';};
+document.getElementById('dropArea').ondragleave = e => {e.target.style.borderColor='#666';};
+document.getElementById('dropArea').ondrop = e => {e.preventDefault(); e.target.style.borderColor='#666'; if(e.dataTransfer.files[0]) handlePhoto(e.dataTransfer.files[0]);};
 
-    const chatEl = document.getElementById('chat');
-    const charactersEl = document.getElementById('characters');
-    const modal = document.getElementById('char-modal');
-    const form = document.getElementById('char-form');
-    const avatarPreview = document.getElementById('avatar-preview');
-    const avatarInput = document.getElementById('avatar-input');
-    const deletePhoto = document.getElementById('delete-photo');
+function handlePhoto(file) {
+  if(!file || !file.type.startsWith('image/')) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    document.getElementById('photoPreview').src = ev.target.result;
+    document.getElementById('photoPreview').style.display = 'block';
+    document.querySelector('#dropArea p').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
 
-    let currentAvatar = null;
-    let editingIndex = null;
+function showEditDialog(index = -1) {
+  const dialog = document.getElementById('editDialog');
+  document.getElementById('editIndex').value = index;
+  document.getElementById('dialogTitle').textContent = index===-1 ? 'Add Character' : 'Edit Character';
+  document.getElementById('deleteBtn').style.display = index===-1 ? 'none' : 'inline-block';
 
-    // === Render Characters ===
-    function renderCharacters() {
-      charactersEl.innerHTML = '';
-      characters.forEach((char, i) => {
-        const div = document.createElement('div');
-        div.className = `char-item ${activeChar?.id === char.id ? 'active' : ''}`;
-
-        const img = document.createElement('img');
-        img.className = 'char-avatar';
-        img.src = char.avatar || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iIzMzMyI+PC9yZWN0Pjx0ZXh0IHg9IjUwJSIgeT0iNTUlIiBmb250LXNpemU9IjI0IiBmaWxsPSIjOTk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+PC90ZXh0Pjwvc3ZnPg==';
-
-        const name = document.createElement('div');
-        name.className = 'char-name';
-        name.textContent = char.name || 'Unnamed';
-
-        const editBtn = document.createElement('button');
-        editBtn.className = 'edit-btn';
-        editBtn.textContent = 'Edit';
-        editBtn.onclick = (e) => {
-          e.stopPropagation();
-          openEditModal(i);
-        };
-
-        div.appendChild(img);
-        div.appendChild(name);
-        div.appendChild(editBtn);
-        div.onclick = () => switchCharacter(char);
-        charactersEl.appendChild(div);
-      });
+  if(index === -1) {
+    dialog.querySelectorAll('input, textarea').forEach(el=>el.value='');
+    document.getElementById('photoPreview').src = '';
+    document.getElementById('photoPreview').style.display = 'none';
+    document.querySelector('#dropArea p').style.display = 'block';
+  } else {
+    const c = characters[index];
+    document.getElementById('charName').value = c.name || '';
+    document.getElementById('charAge').value = c.age || '';
+    document.getElementById('charGender').value = c.gender || '';
+    document.getElementById('charSpecies').value = c.species || '';
+    document.getElementById('charDesc').value = c.desc || '';
+    if(c.photoUrl) {
+      document.getElementById('photoPreview').src = c.photoUrl;
+      document.getElementById('photoPreview').style.display = 'block';
+      document.querySelector('#dropArea p').style.display = 'none';
     }
+  }
+  dialog.showModal();
+}
 
-    // === Switch & Edit ===
-    function switchCharacter(char) {
-      activeChar = char;
-      messages = JSON.parse(localStorage.getItem(`msgs-${char.id}`)) || [];
-      renderMessages();
-      renderCharacters();
+function closeDialog() {
+  document.getElementById('editDialog').close();
+}
+
+function saveCharacter() {
+  const index = parseInt(document.getElementById('editIndex').value);
+  const char = {
+    name: document.getElementById('charName').value.trim() || 'Unnamed',
+    age: document.getElementById('charAge').value.trim() || '',
+    gender: document.getElementById('charGender').value.trim() || '',
+    species: document.getElementById('charSpecies').value.trim() || '',
+    desc: document.getElementById('charDesc').value.trim() || '',
+    photoUrl: document.getElementById('photoPreview').src || ''
+  };
+
+  if(index === -1) characters.push(char);
+  else characters[index] = char;
+
+  saveToStorage();
+  renderCharacters();
+  closeDialog();
+}
+
+function deleteCharacter() {
+  const index = parseInt(document.getElementById('editIndex').value);
+  characters.splice(index,1);
+  saveToStorage();
+  renderCharacters();
+  closeDialog();
+}
+
+function renderCharacters() {
+  const cont = document.getElementById('characters');
+  cont.innerHTML = `<div class="char active" onclick="selectChar(-1)">
+    <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='%23444'/></svg>">
+    <small>All</small>
+  </div>`;
+
+  characters.forEach((c,i) => {
+    const div = document.createElement('div');
+    div.className = 'char';
+    div.onclick = () => selectChar(i);
+    div.ondblclick = () => showEditDialog(i); // double-click to edit
+    div.innerHTML = `
+      <img src="${c.photoUrl || 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2240%22 fill=%23${i%2?'6a6':'468'}/></svg>'}" title="${c.name}\n${c.desc}">
+      <div>${c.name}</div>
+      <small>${c.age||''} ${c.species||''}</small>
+    `;
+    cont.appendChild(div);
+  });
+}
+
+function selectChar(i) {
+  currentChar = i;
+  document.querySelectorAll('.char').forEach((el,idx) => el.classList.toggle('active', idx===i+1));
+  renderChat();
+}
+
+function renderChat() {
+  const chat = document.getElementById('chat');
+  chat.innerHTML = '';
+  messages.forEach(m => {
+    if(currentChar !== -1 && m.sender !== 'user' && m.sender !== currentChar) return;
+    const div = document.createElement('div');
+    div.className = 'msg ' + (m.sender==='user'?'user':'bot');
+    if(m.sender !== 'user') {
+      const c = characters[m.sender];
+      div.innerHTML = `<span class="name">${c.name}</span>${m.text}`;
+    } else {
+      div.textContent = m.text;
     }
+    chat.appendChild(div);
+  });
+  chat.scrollTop = chat.scrollHeight;
+}
 
-    function openEditModal(index) {
-      editingIndex = index;
-      const char = characters[index];
+function sendMessage() {
+  const input = document.getElementById('input');
+  const text = input.value.trim();
+  if(!text) return;
+  messages.push({sender:'user', text});
+  input.value = '';
 
-      modal.querySelector('#modal-title').textContent = 'Edit Character';
-      form.name.value = char.name || '';
-      form.description.value = char.description || '';
-      form.age.value = char.age || '';
-      form.gender.value = char.gender || '';
-      form.species.value = char.species || '';
-
-      currentAvatar = char.avatar;
-      avatarPreview.src = char.avatar || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTMwIiBoZWlnaHQ9IjEzMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzMzIj48L3JlY3Q+PHRleHQgeD0iNTAlIiB5PSI1NSUiIGZvbnQtc2l6ZT0iNTUiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj4+PC90ZXh0Pjwvc3ZnPg==';
-      deletePhoto.style.display = char.avatar ? 'inline-block' : 'none';
-
-      modal.showModal();
-    }
-
-    // === Avatar Handling ===
-    avatarInput.onchange = () => {
-      const file = avatarInput.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = e => {
-        currentAvatar = e.target.result;
-        avatarPreview.src = currentAvatar;
-        deletePhoto.style.display = 'inline-block';
-      };
-      reader.readAsDataURL(file);
-    };
-
-    deletePhoto.onclick = () => {
-      currentAvatar = null;
-      avatarPreview.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTMwIiBoZWlnaHQ9IjEzMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzMzIj48L3JlY3Q+PHRleHQgeD0iNTAlIiB5PSI1NSUiIGZvbnQtc2l6ZT0iNTUiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj4+PC90ZXh0Pjwvc3ZnPg==';
-      deletePhoto.style.display = 'none';
-      avatarInput.value = '';
-    };
-
-    // Drag & drop
-    modal.addEventListener('dragover', e => { e.preventDefault(); modal.style.transform = 'scale(1.02)'; });
-    modal.addEventListener('dragleave', () => modal.style.transform = '');
-    modal.addEventListener('drop', e => {
-      e.preventDefault();
-      modal.style.transform = '';
-      const file = e.dataTransfer.files[0];
-      if (file && file.type.startsWith('image/')) {
-        avatarInput.files = e.dataTransfer.files;
-        avatarInput.dispatchEvent(new Event('change'));
-      }
+  // Simple reply from all characters (or just the selected one)
+  setTimeout(() => {
+    const responders = currentChar === -1 ? characters.map((_,i)=>i) : [currentChar];
+    responders.forEach(i => {
+      const c = characters[i];
+      const reply = generateReply(c, text);
+      messages.push({sender:i, text: reply});
     });
+    saveToStorage();
+    renderChat();
+  }, 500);
+}
 
-    // === Modal Controls ===
-    document.getElementById('new-char').onclick = () => {
-      editingIndex = null;
-      modal.querySelector('#modal-title').textContent = 'Create New Character';
-      form.reset();
-      currentAvatar = null;
-      avatarPreview.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTMwIiBoZWlnaHQ9IjEzMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzMzIj48L3JlY3Q+PHRleHQgeD0iNTAlIiB5PSI1NSUiIGZvbnQtc2l6ZT0iNTUiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj4+PC90ZXh0Pjwvc3ZnPg==';
-      deletePhoto.style.display = 'none';
-      modal.showModal();
-    };
+function generateReply(char, userMsg) {
+  // Very simple personality-based reply (you can replace with real AI later)
+  const greetings = ['Hey!', 'Yo', 'Hi there', 'Hello~', 'Sup'];
+  const endings = [' :3', ' ^^', '!', '...', ' 💕', ' 🔥'];
+  const name = char.name || 'Someone';
+  return `${name}: ${greetings[Math.floor(Math.random()*greetings.length)]} You said "${userMsg}". That's cool${endings[Math.floor(Math.random()*endings.length)]}`;
+}
 
-    document.getElementById('cancel-modal').onclick = () => modal.close();
+function saveToStorage() {
+  localStorage.setItem('characters', JSON.stringify(characters));
+  localStorage.setItem('messages', JSON.stringify(messages));
+}
 
-    // === Save Character ===
-    form.onsubmit = e => {
-      e.preventDefault();
-      const fd = new FormData(form);
-      const char = {
-        id: editingIndex !== null ? characters[editingIndex].id : Date.now().toString(),
-        name: fd.get('name').trim(),
-        description: fd.get('description').trim(),
-        age: fd.get('age') ? parseInt(fd.get('age')) : null,
-        gender: fd.get('gender'),
-        species: fd.get('species').trim() || null,
-        avatar: currentAvatar
-      };
+function loadFromStorage() {
+  const c = localStorage.getItem('characters');
+  const m = localStorage.getItem('messages');
+  if(c) characters = JSON.parse(c);
+  if(m) messages = JSON.parse(m);
+}
 
-      if (editingIndex !== null) {
-        characters[editingIndex] = char;
-      } else {
-        characters.push(char);
-      }
+function saveChat() {
+  const data = {characters, messages, savedAt: new Date().toISOString()};
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `groupchat_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+}
 
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(characters));
+function loadChat(e) {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      characters = data.characters || [];
+      messages = data.messages || [];
+      saveToStorage();
       renderCharacters();
-      modal.close();
-
-      if (!activeChar || activeChar.id === char.id) {
-        switchCharacter(char);
-      }
-    };
-
-    // === Chat ===
-    function renderMessages() {
-      chatEl.innerHTML = '';
-      messages.forEach(m => {
-        const div = document.createElement('div');
-        div.className = `message ${m.role}`;
-        div.textContent = m.content;
-        chatEl.appendChild(div);
-      });
-      chatEl.scrollTop = chatEl.scrollHeight;
-    }
-
-    document.getElementById('send').onclick = sendMessage;
-    document.getElementById('user-input').addEventListener('keydown', e => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
-      }
-    });
-
-    async function sendMessage() {
-      if (!activeChar) return alert('Select or create a character first!');
-      const input = document.getElementById('user-input');
-      const msg = input.value.trim();
-      if (!msg) return;
-      input.value = '';
-
-      messages.push({ role: 'user', content: msg });
-      renderMessages();
-
-      const prompt = `You are ${activeChar.name}.
-${activeChar.description ? 'Personality: ' + activeChar.description : ''}
-${activeChar.age ? 'Age: ' + activeChar.age : ''}
-${activeChar.gender ? 'Gender: ' + activeChar.gender : ''}
-${activeChar.species ? 'Species: ' + activeChar.species : ''}
-Reply in first person. Stay in character.`;
-
-      try {
-        const res = await fetch('https://api.x.ai/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer YOUR_XAI_API_KEY_HERE'
-          },
-          body: JSON.stringify({
-            model: 'grok-beta',
-            messages: [
-              { role: 'system', content: prompt },
-              ...messages.slice(-25)
-            ],
-            temperature: 0.9,
-            max_tokens: 700
-          })
-        });
-        const data = await res.json();
-        const reply = data.choices[0].message.content;
-        messages.push({ role: 'bot', content: reply });
-        renderMessages();
-        localStorage.setItem(`msgs-${activeChar.id}`, JSON.stringify(messages));
-      } catch (err) {
-        chatEl.innerHTML += `<div class="message bot">Error: ${err.message}</div>`;
-      }
-    }
-
-    // === Init ===
-    renderCharacters();
-    if (characters.length > 0) switchCharacter(characters[0]);
-  </script>
+      renderChat();
+      alert('Chat loaded!');
+    } catch(err) { alert('Invalid file'); }
+  };
+  reader.readAsText(file);
+}
+</script>
 </body>
 </html>
